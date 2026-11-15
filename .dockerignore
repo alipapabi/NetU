@@ -1,0 +1,21 @@
+# 敏感数据
+.passwords.yaml
+*.passwords.yaml
+down/
+config/
+.trash/
+
+# 版本控制与缓存
+.git/
+.gitignore
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.log
+.venv/
+venv/
+
+# 本地开发
+.vscode/
+.idea/
+.DS_Store

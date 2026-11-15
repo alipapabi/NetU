@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1626">
+  <title>预览：{{ preview.filename }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+</head>
+<body class="preview-page">
+  <header class="preview-topbar">
+    <div class="preview-file">
+      <strong class="preview-title" title="{{ preview.filename }}">{{ preview.filename }}</strong>
+      <small class="preview-sub">{{ preview.kind }} · {{ preview.size_text }} · {{ preview.modified_text }}</small>
+    </div>
+    <div class="preview-actions">
+      <a class="ghost-link" href="{{ download_url }}">下载</a>
+      <button type="button" class="ghost-link" onclick="window.close()">关闭</button>
+    </div>
+  </header>
+  <main class="preview-main">
+    {% if preview.mode == 'image' %}
+      <img class="preview-image" src="{{ raw_url }}" alt="{{ preview.filename }}">
+    {% elif preview.mode == 'audio' %}
+      <audio class="preview-audio" controls autoplay src="{{ raw_url }}"></audio>
+    {% elif preview.mode == 'video' %}
+      <video class="preview-video" controls autoplay playsinline preload="metadata" src="{{ raw_url }}"></video>
+    {% elif preview.mode == 'pdf' %}
+      <embed class="preview-frame" src="{{ raw_url }}" type="application/pdf">
+    {% elif preview.mode == 'html-sandbox' %}
+      <iframe class="preview-frame" src="{{ raw_url }}" sandbox="allow-scripts allow-same-origin"></iframe>
+    {% elif preview.html %}
+      {{ preview.html | safe }}
+    {% else %}
+      <div class="preview-empty">
+        <p>该格式暂不支持在线预览，可下载后使用本地软件打开。</p>
+        <a class="ghost-link" href="{{ download_url }}">下载文件</a>
+      </div>
+    {% endif %}
+    {% if preview.truncated %}
+      <p class="preview-note">内容较大，此处仅展示前一部分。</p>
+    {% endif %}
+  </main>
+</body>
+</html>

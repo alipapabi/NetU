@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1626">
+  <title>NetU 文件管理器</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+</head>
+<body class="app-page" data-username="{{ username }}">
+  <header class="app-bar">
+    <div class="app-bar-inner">
+      <a class="brand" href="/" aria-label="返回首页">
+        <span class="brand-mark" aria-hidden="true">DC</span>
+        <span class="brand-text">
+          <strong>NetU</strong>
+          <small>文件管理器</small>
+        </span>
+      </a>
+      <div class="app-bar-actions">
+        <span class="user-chip" title="{{ username }}"><span class="dot" aria-hidden="true"></span>{{ username }}</span>
+        <a class="ghost-link" href="/logout">退出登录</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="page-head">
+      <h1>我的文件</h1>
+      <p>当前账户：<strong>{{ username }}</strong> · 支持上传、预览、下载与删除</p>
+    </section>
+
+    <section class="admin-card">
+      <h2>账户备注</h2>
+      <p class="file-meta">本账户的共享备注，管理员与已登录用户都能查看和修改。输入即自动保存，仅支持文字。</p>
+      <div class="note-block">
+        <textarea id="accountNote" class="note-input" rows="2" placeholder="写下关于这个账户的说明（输入即存，仅文字）"></textarea>
+        <span class="note-status"></span>
+      </div>
+    </section>
+
+    <section class="toolbar">
+      <input id="searchInput" type="search" placeholder="搜索文件名">
+      <button id="uploadBtn" type="button" data-upload-trigger>选择文件上传</button>
+      <button id="cameraBtn" type="button" class="ghost-link" data-upload-trigger>拍照/选图</button>
+      <button id="refreshBtn" type="button" class="ghost-link">刷新列表</button>
+      <input id="fileInput" type="file" multiple hidden>
+      <input id="cameraInput" type="file" accept="image/*,video/*" multiple hidden>
+    </section>
+
+    <section class="status-row">
+      <span id="uploadStatus"></span>
+    </section>
+
+    <div id="uploadProgress" class="upload-progress" hidden aria-hidden="true">
+      <div id="uploadProgressBar" class="upload-progress-bar"></div>
+    </div>
+
+    <section id="actionStatus" class="action-status" aria-live="polite"></section>
+
+    <section id="fileList" class="file-list"></section>
+  </main>
+
+  <div id="actionAuthModal" class="modal-backdrop" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="actionModalTitle">
+      <h2 id="actionModalTitle">请输入操作密码</h2>
+      <p id="actionModalDesc" class="modal-desc">当前操作需要先验证密码。</p>
+      <input id="actionPasswordInput" type="password" placeholder="请输入密码" autocomplete="off">
+      <p id="actionModalError" class="modal-error"></p>
+      <div class="modal-actions">
+        <button id="actionModalCancel" type="button" class="ghost-link">取消</button>
+        <button id="actionModalConfirm" type="button">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="inlinePreviewModal" class="modal-backdrop preview-backdrop" hidden>
+    <div class="modal-card preview-card" role="dialog" aria-modal="true" aria-labelledby="inlinePreviewTitle">
+      <div class="preview-header">
+        <h2 id="inlinePreviewTitle">文件预览</h2>
+        <button id="inlinePreviewClose" type="button" class="ghost-link">关闭</button>
+      </div>
+      <div id="inlinePreviewBody" class="preview-body"></div>
+      <div class="modal-actions">
+        <button id="inlinePreviewDownload" type="button">下载此文件</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+  <script src="{{ url_for('static', filename='wechat-guide.js') }}"></script>
+</body>
+</html>

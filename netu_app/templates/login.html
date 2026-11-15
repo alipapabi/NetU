@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1626">
+  <title>NetU 登录</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+</head>
+<body class="auth-page">
+  <main class="auth-card">
+    <div class="auth-head">
+      <span class="brand-mark auth-mark" aria-hidden="true">DC</span>
+      <h1>NetU</h1>
+    </div>
+    <p class="auth-subtitle">请输入访问密码进入专属区</p>
+    <form method="post" action="/login" class="auth-form">
+      <input type="hidden" name="next" value="{{ next_url }}">
+      <div class="field-row">
+        <input id="loginPassword" type="password" name="password" placeholder="请输入密码" autocomplete="off" autofocus>
+        <button id="togglePasswordBtn" type="button" class="ghost-link" aria-pressed="false">显示</button>
+      </div>
+      <button type="submit">进入</button>
+    </form>
+    {% if request.args.get('e') %}
+    <p class="auth-error">密码错误，请重试。</p>
+    {% endif %}
+  </main>
+  <script>
+    (function () {
+      const input = document.getElementById("loginPassword");
+      const toggle = document.getElementById("togglePasswordBtn");
+      if (input && toggle) {
+        toggle.addEventListener("click", function () {
+          const showPlain = input.type === "password";
+          input.type = showPlain ? "text" : "password";
+          toggle.textContent = showPlain ? "隐藏" : "显示";
+          toggle.setAttribute("aria-pressed", showPlain ? "true" : "false");
+          input.focus();
+        });
+      }
+      // 快捷登录：密码放在 URL 的 # 片段里，浏览器不会把片段发送给服务器，
+      // 因此不会进入服务器日志或 Referer。读入后立即从地址栏与历史中清除。
+      if (input) {
+        const rawHash = window.location.hash.replace(/^#/, "");
+        let password = "";
+        try {
+          password = decodeURIComponent(rawHash);
+        } catch (_error) {
+          password = rawHash;
+        }
+        if (password) {
+          input.value = password;
+          try {
+            window.history.replaceState(null, "", window.location.pathname + window.location.search);
+          } catch (_error) {
+            // Ignore history API failures and continue logging in.
+          }
+          if (input.form) {
+            input.form.submit();
+          }
+        }
+      }
+    })();
+  </script>
+  <script src="{{ url_for('static', filename='wechat-guide.js') }}"></script>
+</body>
+</html>

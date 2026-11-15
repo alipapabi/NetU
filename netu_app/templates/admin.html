@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1626">
+  <title>NetU 超级管理后台</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+</head>
+<body class="app-page">
+  <header class="app-bar">
+    <div class="app-bar-inner">
+      <a class="brand" href="/" aria-label="返回首页">
+        <span class="brand-mark" aria-hidden="true">DC</span>
+        <span class="brand-text">
+          <strong>NetU</strong>
+          <small>超级管理后台</small>
+        </span>
+      </a>
+      <div class="app-bar-actions">
+        <span class="user-chip"><span class="dot" aria-hidden="true"></span>超级管理员</span>
+        <a class="ghost-link" href="/logout">退出登录</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="page-head">
+      <h1>管理控制台</h1>
+      <p>分配账户、配置密码、管理所有账户的上传下载内容</p>
+    </section>
+
+    <section class="stat-grid" aria-label="概览">
+      <article class="stat-card">
+        <span class="stat-label">账户总数</span>
+        <strong id="statAccounts" class="stat-value">—</strong>
+        <span class="stat-sub" id="statAccountsSub">含启用与停用</span>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">文件总数</span>
+        <strong id="statFiles" class="stat-value">—</strong>
+        <span class="stat-sub">全部账户与公共区</span>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">回收站</span>
+        <strong id="statTrash" class="stat-value">—</strong>
+        <span class="stat-sub">已隐藏文件</span>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">占用空间</span>
+        <strong id="statSize" class="stat-value">—</strong>
+        <span class="stat-sub">含回收站</span>
+      </article>
+    </section>
+
+    <nav class="tabs" role="tablist" aria-label="管理分区">
+      <button type="button" class="tab is-active" role="tab" aria-selected="true" data-tab="accounts">账户管理</button>
+      <button type="button" class="tab" role="tab" aria-selected="false" data-tab="files">文件管理</button>
+      <button type="button" class="tab" role="tab" aria-selected="false" data-tab="security">安全配置</button>
+    </nav>
+
+    <div class="tab-panel" data-panel="accounts">
+      <section class="admin-card">
+        <h2>账户管理</h2>
+        <p id="accountEditHint" class="file-meta">正在创建新账户。默认登录密码与下载密码相同；点击下方账户的「编辑」可查看并修改其全部密码。</p>
+        <label for="accountUsername">用户名</label>
+        <input id="accountUsername" type="text" placeholder="字母数字开头，可含 _ - . ，最长 32 位" autocomplete="off">
+        <label for="accountLoginPassword">登录密码</label>
+        <div class="field-row">
+          <input id="accountLoginPassword" type="text" placeholder="用户凭此密码登录专属区（≥4位，不可为空）" autocomplete="off">
+          <button id="randomLoginBtn" type="button" class="ghost-link" title="随机生成 4-6 位大写字母或数字">随机</button>
+        </div>
+        <label for="accountDownloadPassword">下载密码</label>
+        <div class="field-row">
+          <input id="accountDownloadPassword" type="text" placeholder="下载文件时校验（≥4位，默认与登录密码相同）" autocomplete="off">
+          <button id="randomDownloadBtn" type="button" class="ghost-link" title="随机生成 4-6 位大写字母或数字">随机</button>
+        </div>
+        <label for="accountDeletePassword">删除密码</label>
+        <div class="field-row">
+          <input id="accountDeletePassword" type="text" placeholder="删除（隐藏）文件时校验（≥4位）" autocomplete="off">
+          <button id="randomDeleteBtn" type="button" class="ghost-link" title="随机生成 4-6 位大写字母或数字">随机</button>
+        </div>
+        <div class="field-grid">
+          <div>
+            <label for="accountExpireDays">有效期（天）</label>
+            <input id="accountExpireDays" type="number" min="0" value="{{ default_expire_days }}" placeholder="到期自动停用，0 = 永不过期">
+            <span class="field-hint">保存后从当天重新计算，到期自动停用；0 表示永不过期。</span>
+          </div>
+          <label class="checkbox-row" for="accountEnabled">
+            <input id="accountEnabled" type="checkbox" checked> 启用该账户
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button id="accountRandomAllBtn" type="button" class="ghost-link">全部随机</button>
+          <button id="accountResetBtn" type="button" class="ghost-link">清空/新建</button>
+          <button id="accountSubmitBtn" type="button">创建账户</button>
+        </div>
+        <p id="accountStatus" class="file-meta"></p>
+        <div id="accountList" class="account-list"></div>
+      </section>
+
+      <section id="sharePanel" class="admin-card" hidden>
+        <h2>分享给用户</h2>
+        <p class="file-meta">把下面的信息发给用户：对方可直接点「快捷登录链接」进入专属区（密码在网址 # 之后，不会发送给服务器），也可在登录页手动输入「登录密码」。</p>
+        <textarea id="shareText" class="share-box" readonly rows="4"></textarea>
+        <div class="share-qr" role="group" aria-label="分享二维码">
+          <figure class="share-qr-item">
+            <canvas id="shareQrLogin" class="share-qr-canvas" width="200" height="200" role="img" aria-label="账户专属快捷登录二维码"></canvas>
+            <figcaption>
+              <strong>专属快捷登录码</strong>
+              <span>扫码直达该账户登录页，免输密码</span>
+            </figcaption>
+          </figure>
+          <figure class="share-qr-item">
+            <canvas id="shareQrSite" class="share-qr-canvas" width="200" height="200" role="img" aria-label="NetU 站点入口二维码"></canvas>
+            <figcaption>
+              <strong>站点入口码</strong>
+              <span>扫码打开 NetU 首页</span>
+            </figcaption>
+          </figure>
+        </div>
+        <div class="modal-actions">
+          <button id="shareCopyBtn" type="button">复制全部</button>
+          <button id="shareCopyPasswordBtn" type="button" class="ghost-link">只复制登录密码</button>
+          <button id="shareNativeBtn" type="button" class="ghost-link">分享</button>
+        </div>
+        <p id="shareStatus" class="file-meta"></p>
+      </section>
+    </div>
+
+    <div class="tab-panel" data-panel="files" hidden>
+      <section class="admin-card">
+        <h2>文件管理</h2>
+        <p class="file-meta">下方汇总全部账户与公共区的文件。可用搜索、归属筛选与排序快速定位；列表按需分页加载，文件很多时也不会卡顿。可为账户和文件写备注，输入即自动保存（仅文字）。</p>
+        <div class="filter-bar">
+          <input id="fileSearch" type="search" placeholder="搜索文件名 / 备注 / 归属账户" autocomplete="off">
+          <select id="fileOwnerFilter"></select>
+          <select id="fileSort">
+            <option value="modified">最近修改优先</option>
+            <option value="name">名称 A → Z</option>
+            <option value="size">大文件优先</option>
+          </select>
+        </div>
+        <div class="toolbar">
+          <select id="ownerSelect"></select>
+          <button id="adminUploadBtn" type="button" data-upload-trigger>上传到该账户</button>
+          <button id="adminCameraBtn" type="button" class="ghost-link" data-upload-trigger>拍照/选图</button>
+          <button id="adminRefreshBtn" type="button" class="ghost-link">刷新</button>
+          <input id="adminFileInput" type="file" multiple hidden>
+          <input id="adminCameraInput" type="file" accept="image/*,video/*" multiple hidden>
+        </div>
+        <p id="adminFileStatus" class="file-meta"></p>
+        <div id="adminUploadProgress" class="upload-progress" hidden aria-hidden="true">
+          <div id="adminUploadProgressBar" class="upload-progress-bar"></div>
+        </div>
+        <div id="adminFileList" class="file-list"></div>
+        <div class="list-more">
+          <button id="fileLoadMore" type="button" class="ghost-link" hidden>加载更多</button>
+        </div>
+        <h3 class="section-title">回收站（已隐藏）</h3>
+        <div id="adminHiddenList" class="file-list"></div>
+      </section>
+    </div>
+
+    <div class="tab-panel" data-panel="security" hidden>
+      <section class="admin-card">
+        <h2>安全配置</h2>
+        <label for="superadminPassword">超级管理员新登录密码（留空则不改）</label>
+        <input id="superadminPassword" type="password" placeholder="超级管理员密码（≥4位）" autocomplete="off">
+        <button id="saveSuperadminBtn" type="button">更新超级管理员密码</button>
+
+        <label for="cookieTtlDays">Cookie 有效期（天）</label>
+        <input id="cookieTtlDays" type="number" min="1" value="{{ security.cookie_ttl_days }}">
+        <button id="saveSecurityBtn" type="button" class="ghost-link">保存有效期</button>
+        <p id="adminStatus" class="file-meta">更新超级管理员密码后需要重新登录。</p>
+      </section>
+    </div>
+  </main>
+  <script src="{{ url_for('static', filename='qrcode.js') }}"></script>
+  <script src="{{ url_for('static', filename='admin.js') }}"></script>
+</body>
+</html>

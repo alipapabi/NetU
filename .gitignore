@@ -1,0 +1,42 @@
+# 🔴 敏感数据 —— 绝不提交
+.passwords.yaml
+.passwords.yaml.*
+*.passwords.yaml
+
+# 用户上传的文件
+down/
+.trash/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.venv/
+venv/
+env/
+
+# 测试与缓存
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# 运行时日志
+*.log
+logs/
+
+# 本地备份
+*.bak
+*.bak.*
+.backups/
