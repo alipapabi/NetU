@@ -71,7 +71,7 @@ def test_superadmin_json_login_redirects_to_admin(tmp_path):
     app = build_app(tmp_path)
     client = app.test_client()
 
-    response = client.post("/login", json={"password": "7bef9fb4b0"})
+    response = client.post("/login", json={"password": "admin888"})
     body = response.get_json()
 
     assert response.status_code == 200

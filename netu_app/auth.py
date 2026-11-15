@@ -15,7 +15,7 @@ from .security import is_valid_username, normalize_note
 
 
 SCHEMA_VERSION = 2
-DEFAULT_PASSWORD = "7bef9fb4b0"
+DEFAULT_PASSWORD = "admin888"
 ACCOUNT_ABILITIES = ("download", "delete")
 
 # 新账户默认有效期（天）：到期后自动停用；0 表示永不过期。

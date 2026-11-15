@@ -15,7 +15,7 @@ def build_app(tmp_path):
 
 
 def login_admin(client):
-    return client.post("/login", json={"password": "7bef9fb4b0"})
+    return client.post("/login", json={"password": "admin888"})
 
 
 def create_account(client, username="alice", login="alice-login", download="alice-dl", delete="alice-del"):

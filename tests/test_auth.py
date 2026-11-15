@@ -27,8 +27,8 @@ def expire_account(manager, username, moments_ago=timedelta(days=1)):
 def test_default_superadmin_password_matches(tmp_path):
     manager = build_manager(tmp_path)
 
-    assert manager.verify_superadmin_password("7bef9fb4b0") is True
-    assert manager.match_login("7bef9fb4b0") == {"role": "superadmin", "username": None}
+    assert manager.verify_superadmin_password("admin888") is True
+    assert manager.match_login("admin888") == {"role": "superadmin", "username": None}
 
 
 def test_legacy_plaintext_config_is_migrated(tmp_path):
@@ -66,7 +66,7 @@ def test_login_password_cannot_equal_superadmin_password(tmp_path):
     manager = build_manager(tmp_path)
 
     with pytest.raises(ValueError):
-        manager.create_account("alice", "7bef9fb4b0", "alice-dl", "alice-del")
+        manager.create_account("alice", "admin888", "alice-dl", "alice-del")
 
 
 def test_invalid_username_is_rejected(tmp_path):

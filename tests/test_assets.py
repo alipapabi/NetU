@@ -52,7 +52,7 @@ def test_index_page_hides_recycle_bin_for_regular_users(tmp_path):
 def test_admin_page_contains_account_and_file_sections(tmp_path):
     app = build_app(tmp_path)
     client = app.test_client()
-    client.post("/login", json={"password": "7bef9fb4b0"})
+    client.post("/login", json={"password": "admin888"})
 
     body = client.get("/admin").get_data(as_text=True)
 
@@ -178,7 +178,7 @@ def test_login_page_supports_fragment_quick_login(tmp_path):
 def test_admin_page_brand_links_home(tmp_path):
     app = build_app(tmp_path)
     client = app.test_client()
-    client.post("/login", json={"password": "7bef9fb4b0"})
+    client.post("/login", json={"password": "admin888"})
 
     body = client.get("/admin").get_data(as_text=True)
 
