@@ -791,6 +791,17 @@ textarea {
   margin-top: 4px;
 }
 
+.activity-block {
+  margin-top: 18px;
+}
+
+.activity-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+
 .field-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

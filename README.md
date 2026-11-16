@@ -25,6 +25,7 @@ NetU 把一台普通 VPS 变成一个私有网盘：每个账号有独立目录�
 - 账号管理：创建 / 修改 / 停用 / 删除，三类密码可单独重置
 - **文件归属分配**：把公共区的文件分配给指定账号，账号登录后立刻可见
 - 公共文件管理：上传、预览、下载、删除、从回收站恢复
+- **行为记录**：记录每个账号的登录 / 上传 / 下载 / 删除（时间 + 账号 + IP + 文件名），可按账号单独查看和清空
 - 安全策略：登录 Cookie 有效期、连续失败锁定秒数、最大尝试次数
 - 超管密码修改（改完所有旧 Cookie 立即失效）
 
@@ -188,6 +189,8 @@ server {
 | `NETU_PORT` | `8899` | 监听端口 |
 | `NETU_DOWN_DIR` | `<项目>/down` | 文件存储根目录 |
 | `NETU_CONFIG` | `<项目>/.passwords.yaml` | 账号与安全配置存放路径 |
+| `NETU_ACTIVITY_LOG` | `<配置目录>/activity.jsonl` | 行为记录文件路径 |
+| `NETU_ACTIVITY_MAX` | `2000` | 行为记录保留条数，超出自动丢弃最旧的 |
 | `NETU_SECRET` | `netu-dev-secret` | Cookie 签名密钥。**生产必须改**，改了所有人的登录会失效一次 |
 
 ### 关于 `NETU_SECRET`
@@ -208,7 +211,8 @@ NetU/
 │   ├── config.py           # 环境变量 → 配置字典
 │   ├── auth.py             # 账号管理、PBKDF2 哈希、过期、防爆破
 │   ├── main_routes.py      # 账号侧路由：登录 / 列表 / 上传 / 下载 / 预览 / 删除
-│   ├── admin_routes.py     # 超管路由：账号、安全、公共文件、回收站
+│   ├── admin_routes.py     # 超管路由：账号、安全、公共文件、回收站、行为记录
+│   ├── activity.py         # 行为记录：JSONL 追加写入 + 按条数滚动裁剪
 │   ├── file_service.py     # 文件操作：列举 / 备注 / 重名处理 / 回收站
 │   ├── security.py         # 用户名合法性、路径穿越防护
 │   ├── preview_service.py  # 12 类格式的在线预览渲染
@@ -267,6 +271,8 @@ down/                      ← 公共区（未分配给具体账号的文件，�
 | `POST` | `/admin/api/superadmin` | 修改超管密码 |
 | `GET` | `/admin/api/files` | 公共区文件列表 |
 | `POST` | `/admin/api/restore` | 从回收站恢复 |
+| `GET` | `/admin/api/activity` | 行为记录，带 `username` 参数只看该账号 |
+| `POST` | `/admin/api/activity/clear` | 清空行为记录，`{"scope": "all"}` 或 `{"username": "..."}` |
 
 > 新建账号时四个参数至少填三个密码：`username` / `login_password` / `download_password` / `delete_password`，少一个会返回 400。
 

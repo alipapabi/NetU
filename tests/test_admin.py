@@ -67,6 +67,7 @@ def test_admin_page_renders_settings_form(tmp_path):
     assert 'id="fileSort"' in body
     assert 'data-tab="accounts"' in body
     assert 'data-tab="files"' in body
+    assert 'data-tab="activity"' in body
     assert 'data-tab="security"' in body
 
 

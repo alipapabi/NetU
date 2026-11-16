@@ -7,6 +7,7 @@ let allHidden = [];
 let visibleFileCount = 40;
 const FILE_PAGE_SIZE = 40;
 const RANDOM_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+const SUPERADMIN_USER = "superadmin";
 
 function randomPassword() {
   const length = 4 + Math.floor(Math.random() * 3);
@@ -50,6 +51,9 @@ function activateTab(name) {
     window.localStorage.setItem(ADMIN_TAB_KEY, target);
   } catch (_error) {
     // 隐私模式下无法写入本地存储，忽略即可。
+  }
+  if (target === "activity") {
+    loadActivity(SUPERADMIN_USER, "activityList", setActivityStatus);
   }
 }
 
@@ -189,6 +193,77 @@ function setFileStatus(message) {
   }
 }
 
+function setActivityStatus(message, kind = "info") {
+  const node = document.getElementById("activityStatus");
+  if (!node) {
+    return;
+  }
+  node.textContent = message || "";
+  node.className = `file-meta ${kind}`.trim();
+}
+
+function setAccountActivityStatus(message, kind = "info") {
+  const node = document.getElementById("accountActivityStatus");
+  if (!node) {
+    return;
+  }
+  node.textContent = message || "";
+  node.className = `file-meta ${kind}`.trim();
+}
+
+function activityRowHtml(record) {
+  const label = record.action_label || record.action || "操作";
+  const filename = record.filename ? ` · ${escapeHtml(record.filename)}` : "";
+  const ip = record.ip ? ` · ${escapeHtml(record.ip)}` : "";
+  return `
+    <article class="file-card">
+      <div>
+        <div class="file-name">${escapeHtml(label)}${filename}</div>
+        <div class="file-meta">${escapeHtml(record.at || "")}${ip}</div>
+      </div>
+    </article>
+  `;
+}
+
+function renderActivityRecords(containerId, records) {
+  const root = document.getElementById(containerId);
+  if (!root) {
+    return;
+  }
+  const list = records || [];
+  root.innerHTML = list.length === 0
+    ? `<p class="file-meta">暂无记录。</p>`
+    : list.map(activityRowHtml).join("");
+}
+
+async function loadActivity(username, containerId, statusFn) {
+  const query = username ? `?username=${encodeURIComponent(username)}` : "";
+  if (statusFn) {
+    statusFn("正在加载记录…");
+  }
+  try {
+    const data = await requestJson(`/admin/api/activity${query}`);
+    const records = data.records || [];
+    renderActivityRecords(containerId, records);
+    if (statusFn) {
+      statusFn(`共 ${records.length} 条记录。`, "success");
+    }
+  } catch (error) {
+    if (statusFn) {
+      statusFn(error.message || "加载失败", "error");
+    }
+  }
+}
+
+function clearActivity({ scope, username }) {
+  const body = scope === "all" ? { scope: "all" } : { scope: "account", username };
+  return requestJson("/admin/api/activity/clear", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
 async function requestJson(url, options = {}) {
   const response = await fetch(url, { credentials: "same-origin", ...options });
   const payload = await response.json().catch(() => ({}));
@@ -293,6 +368,10 @@ function resetAccountForm() {
   document.getElementById("accountSubmitBtn").textContent = "创建账户";
   document.getElementById("accountEditHint").textContent =
     "正在创建新账户，登录/下载/删除密码默认相同（4-6 位大写字母或数字），可点「随机」单独生成不同的密码。";
+  const activityCard = document.getElementById("accountActivityCard");
+  if (activityCard) {
+    activityCard.hidden = true;
+  }
 }
 
 function editAccount(username) {
@@ -311,6 +390,12 @@ function editAccount(username) {
   document.getElementById("accountSubmitBtn").textContent = "保存修改";
   document.getElementById("accountEditHint").textContent =
     `正在编辑账户「${username}」。可直接查看并修改全部密码（均不可为空）。`;
+  const activityCard = document.getElementById("accountActivityCard");
+  if (activityCard) {
+    document.getElementById("accountActivityTitle").textContent = `「${username}」的行为记录`;
+    activityCard.hidden = false;
+  }
+  loadActivity(username, "accountActivityList", setAccountActivityStatus);
   window.scrollTo({ top: document.getElementById("accountUsername").offsetTop - 80, behavior: "smooth" });
 }
 
@@ -819,6 +904,33 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   document.getElementById("saveSuperadminBtn")?.addEventListener("click", () => {
     saveSuperadmin().catch(() => {});
+  });
+  document.getElementById("activityRefreshBtn")?.addEventListener("click", () => {
+    loadActivity(SUPERADMIN_USER, "activityList", setActivityStatus);
+  });
+  document.getElementById("activityClearAllBtn")?.addEventListener("click", () => {
+    if (!window.confirm("确认清空全部行为记录（含所有账户与超级管理员）？此操作不可恢复。")) {
+      return;
+    }
+    clearActivity({ scope: "all" })
+      .then(() => loadActivity(SUPERADMIN_USER, "activityList", setActivityStatus))
+      .catch((error) => setActivityStatus(error.message, "error"));
+  });
+  document.getElementById("accountActivityRefreshBtn")?.addEventListener("click", () => {
+    if (editingUsername) {
+      loadActivity(editingUsername, "accountActivityList", setAccountActivityStatus);
+    }
+  });
+  document.getElementById("accountActivityClearBtn")?.addEventListener("click", () => {
+    if (!editingUsername) {
+      return;
+    }
+    if (!window.confirm(`确认清空账户「${editingUsername}」的行为记录？此操作不可恢复。`)) {
+      return;
+    }
+    clearActivity({ scope: "account", username: editingUsername })
+      .then(() => loadActivity(editingUsername, "accountActivityList", setAccountActivityStatus))
+      .catch((error) => setAccountActivityStatus(error.message, "error"));
   });
   document.getElementById("accountSubmitBtn")?.addEventListener("click", () => {
     submitAccount().catch((error) => setAccountStatus(error.message, "error"));

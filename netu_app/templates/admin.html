@@ -56,6 +56,7 @@
     <nav class="tabs" role="tablist" aria-label="管理分区">
       <button type="button" class="tab is-active" role="tab" aria-selected="true" data-tab="accounts">账户管理</button>
       <button type="button" class="tab" role="tab" aria-selected="false" data-tab="files">文件管理</button>
+      <button type="button" class="tab" role="tab" aria-selected="false" data-tab="activity">行为记录</button>
       <button type="button" class="tab" role="tab" aria-selected="false" data-tab="security">安全配置</button>
     </nav>
 
@@ -96,6 +97,16 @@
           <button id="accountSubmitBtn" type="button">创建账户</button>
         </div>
         <p id="accountStatus" class="file-meta"></p>
+        <div id="accountActivityCard" class="activity-block" hidden>
+          <h3 class="section-title" id="accountActivityTitle">行为记录</h3>
+          <p class="file-meta">该账户最近的登录 / 上传 / 下载 / 删除记录（最新在前）。</p>
+          <div id="accountActivityList" class="activity-list"></div>
+          <div class="modal-actions">
+            <button id="accountActivityRefreshBtn" type="button" class="ghost-link">刷新</button>
+            <button id="accountActivityClearBtn" type="button" class="ghost-link">清空该账户记录</button>
+          </div>
+          <p id="accountActivityStatus" class="file-meta"></p>
+        </div>
         <div id="accountList" class="account-list"></div>
       </section>
 
@@ -159,6 +170,19 @@
         </div>
         <h3 class="section-title">回收站（已隐藏）</h3>
         <div id="adminHiddenList" class="file-list"></div>
+      </section>
+    </div>
+
+    <div class="tab-panel" data-panel="activity" hidden>
+      <section class="admin-card">
+        <h2>行为记录</h2>
+        <p class="file-meta">下方为超级管理员自身的登录 / 上传 / 下载 / 删除记录（最新在前）。各账户的记录请到「账户管理」中点该账户的「编辑」查看。</p>
+        <div class="toolbar">
+          <button id="activityRefreshBtn" type="button" class="ghost-link">刷新</button>
+          <button id="activityClearAllBtn" type="button" class="ghost-link">清空全部记录</button>
+        </div>
+        <p id="activityStatus" class="file-meta"></p>
+        <div id="activityList" class="activity-list"></div>
       </section>
     </div>
 

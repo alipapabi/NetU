@@ -13,6 +13,7 @@ from flask import (
     send_file,
 )
 
+from .activity import SUPERADMIN_USERNAME, log_activity
 from .auth import (
     ABILITY_COOKIES,
     ACCOUNT_ABILITIES,
@@ -73,6 +74,7 @@ def login_submit():
         return redirect(f"/login?e=1&next={quote(next_url)}")
 
     ttl_seconds = int(manager.get_security_settings()["cookie_ttl_days"]) * 24 * 60 * 60
+    log_activity(match["username"] or SUPERADMIN_USERNAME, "login")
     if match["role"] == "superadmin":
         cookie_name = ADMIN_COOKIE
         token = manager.issue_admin_token(ttl_seconds)
@@ -189,6 +191,7 @@ def api_upload():
     incoming = request.files["file"]
     filename = service.make_upload_name(incoming.filename or "upload.bin")
     incoming.save(service.base_dir / filename)
+    log_activity(g.account, "upload", filename)
     return jsonify({"status": 0, "message": "上传成功", "filename": filename})
 
 
@@ -225,6 +228,7 @@ def api_delete():
     service = FileService(account_dir(g.account))
     if not service.hide(filename):
         return jsonify({"status": 1, "message": "文件不存在"}), 404
+    log_activity(g.account, "delete", filename)
     return jsonify({"status": 0, "message": "已移入回收站"})
 
 
@@ -238,6 +242,7 @@ def download_file(filename):
     target = service.resolve_any(filename)
     if target is None:
         return jsonify({"status": 1, "message": "文件不存在"}), 404
+    log_activity(username, "download", filename)
     return send_file(target, as_attachment=True, download_name=target.name)
 
 

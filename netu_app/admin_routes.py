@@ -13,6 +13,7 @@ from flask import (
     send_file,
 )
 
+from .activity import ACTION_LABELS, SUPERADMIN_USERNAME, get_activity_log, log_activity
 from .auth import (
     ADMIN_COOKIE,
     DEFAULT_ACCOUNT_EXPIRE_DAYS,
@@ -207,6 +208,7 @@ def admin_upload():
     incoming = request.files["file"]
     filename = service.make_upload_name(incoming.filename or "upload.bin")
     incoming.save(service.base_dir / filename)
+    log_activity(SUPERADMIN_USERNAME, "upload", filename)
     return jsonify({"status": 0, "message": "上传成功", "filename": filename})
 
 
@@ -241,6 +243,7 @@ def admin_delete():
         message = "已隐藏"
     if not ok:
         return jsonify({"status": 1, "message": "文件不存在"}), 404
+    log_activity(SUPERADMIN_USERNAME, "delete", filename)
     return jsonify({"status": 0, "message": message})
 
 
@@ -265,6 +268,7 @@ def admin_download():
     target = FileService(directory).resolve_any(request.args.get("filename", ""))
     if target is None:
         return jsonify({"status": 1, "message": "文件不存在"}), 404
+    log_activity(SUPERADMIN_USERNAME, "download", request.args.get("filename", ""))
     return send_file(target, as_attachment=True, download_name=target.name)
 
 
@@ -301,3 +305,32 @@ def admin_raw():
     if target is None:
         return jsonify({"status": 1, "message": "文件不存在"}), 404
     return send_file(target, as_attachment=False)
+
+
+@bp.get("/admin/api/activity")
+@require_superadmin()
+def admin_activity():
+    """返回行为记录，最新的在前；传 username 只看该用户，否则返回全部。"""
+    username = (request.args.get("username") or "").strip()
+    records = [
+        {**item, "action_label": ACTION_LABELS.get(item.get("action"), item.get("action", ""))}
+        for item in get_activity_log().list_records(username or None)
+    ]
+    return jsonify({"status": 0, "username": username, "records": records})
+
+
+@bp.post("/admin/api/activity/clear")
+@require_superadmin()
+def admin_activity_clear():
+    """清空行为记录：scope=all 清空全部，否则清空 body 中 username 的记录。"""
+    data = request.get_json(silent=True) or {}
+    log = get_activity_log()
+    if data.get("scope") == "all":
+        removed = log.clear()
+        return jsonify({"status": 0, "message": f"已清空全部记录（{removed} 条）", "removed": removed})
+    username = (data.get("username") or "").strip()
+    if not username:
+        return jsonify({"status": 1, "message": "缺少用户名"}), 400
+    removed = log.clear(username)
+    return jsonify({"status": 0, "message": f"已清空「{username}」的记录（{removed} 条）", "removed": removed})
+

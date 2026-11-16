@@ -35,6 +35,10 @@ Thumbs.db
 # 运行时日志
 *.log
 logs/
+activity.jsonl
+
+# 开发过程文档 (不属于发布内容)
+docs/
 
 # 本地备份
 *.bak

@@ -208,3 +208,28 @@ def test_hidden_admin_cards_are_collapsed():
     content = (STATIC_DIR / "app.css").read_text(encoding="utf-8")
 
     assert ".admin-card[hidden]" in content
+
+
+def test_admin_page_has_activity_tab_and_controls(tmp_path):
+    app = build_app(tmp_path)
+    client = app.test_client()
+    client.post("/login", json={"password": "admin888"})
+
+    body = client.get("/admin").get_data(as_text=True)
+
+    assert 'data-tab="activity"' in body
+    assert 'data-panel="activity"' in body
+    assert 'id="activityList"' in body
+    assert 'id="activityClearAllBtn"' in body
+    assert 'id="accountActivityCard"' in body
+    assert 'id="accountActivityList"' in body
+    assert 'id="accountActivityClearBtn"' in body
+
+
+def test_admin_js_handles_activity_records():
+    content = (STATIC_DIR / "admin.js").read_text(encoding="utf-8")
+
+    assert "/admin/api/activity" in content
+    assert "loadActivity" in content
+    assert "clearActivity" in content
+    assert 'scope: "all"' in content

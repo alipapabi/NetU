@@ -1,5 +1,6 @@
 from flask import Flask, jsonify
 
+from .activity import ActivityLog
 from .auth import AccountManager
 from .config import load_settings
 
@@ -11,6 +12,10 @@ def create_app(overrides=None):
     app.config["PASSWORD_MANAGER"] = AccountManager(
         app.config["PASSWORD_CONFIG_PATH"],
         app.config["SECRET_KEY"],
+    )
+    app.config["ACTIVITY_LOG"] = ActivityLog(
+        app.config["ACTIVITY_LOG_PATH"],
+        app.config["ACTIVITY_MAX_ENTRIES"],
     )
 
     from .main_routes import bp as main_bp

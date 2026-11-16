@@ -13,6 +13,7 @@ def test_app_factory_builds(tmp_path):
     )
     assert app is not None
     assert app.config["DOWN_DIR"].endswith("down")
+    assert app.config["ACTIVITY_LOG_PATH"].endswith("activity.jsonl")
 
 
 def test_load_settings_accepts_host_and_port_overrides():
